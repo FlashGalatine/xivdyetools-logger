@@ -155,7 +155,8 @@ export abstract class BaseLogger implements ExtendedLogger {
       .replace(/password[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'password=[REDACTED]')
       .replace(/api[_-]?key[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'api_key=[REDACTED]')
       // Additional common sensitive patterns
-      .replace(/authorization[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'authorization=[REDACTED]')
+      // Use negative lookahead to skip "Authorization: Bearer ..." which is handled by Bearer pattern
+      .replace(/authorization[=:]\s*(?!Bearer\s)(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'authorization=[REDACTED]')
       .replace(/access[_-]?token[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'access_token=[REDACTED]')
       .replace(/refresh[_-]?token[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'refresh_token=[REDACTED]');
   }

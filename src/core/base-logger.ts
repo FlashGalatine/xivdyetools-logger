@@ -132,14 +132,32 @@ export abstract class BaseLogger implements ExtendedLogger {
 
   /**
    * Sanitize error messages to remove potential secrets
+   *
+   * LOG-ERR-001: Fixed patterns to capture values that may contain spaces.
+   * Uses patterns that match:
+   * - Quoted values: token="my secret" or token='my secret'
+   * - Unquoted values until delimiter: token=value,next or token=value;next
+   * - Remaining text until end: token=everything else here
    */
   protected sanitizeErrorMessage(message: string): string {
+    // Pattern components:
+    // - ["']([^"']*?)["'] matches quoted strings
+    // - [^\s,;'"]+(?:\s+[^\s,;'"=]+)* matches unquoted values (including spaces before delimiter)
+    // The order matters: try quoted first, then unquoted
+
     return message
+      // Bearer tokens - typically single tokens without spaces
       .replace(/Bearer\s+\S+/gi, 'Bearer [REDACTED]')
-      .replace(/token[=:]\s*\S+/gi, 'token=[REDACTED]')
-      .replace(/secret[=:]\s*\S+/gi, 'secret=[REDACTED]')
-      .replace(/password[=:]\s*\S+/gi, 'password=[REDACTED]')
-      .replace(/api[_-]?key[=:]\s*\S+/gi, 'api_key=[REDACTED]');
+      // Key=value patterns - handle quoted and unquoted values
+      // Matches: key="value with spaces" or key='value' or key=value until delimiter
+      .replace(/token[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'token=[REDACTED]')
+      .replace(/secret[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'secret=[REDACTED]')
+      .replace(/password[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'password=[REDACTED]')
+      .replace(/api[_-]?key[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'api_key=[REDACTED]')
+      // Additional common sensitive patterns
+      .replace(/authorization[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'authorization=[REDACTED]')
+      .replace(/access[_-]?token[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'access_token=[REDACTED]')
+      .replace(/refresh[_-]?token[=:]\s*(?:["']([^"']*?)["']|[^\s,;]+)/gi, 'refresh_token=[REDACTED]');
   }
 
   /**

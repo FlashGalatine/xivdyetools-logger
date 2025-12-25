@@ -431,11 +431,14 @@ describe('BaseLogger', () => {
     describe('child', () => {
       it('should create child logger with inherited context', () => {
         logger.setContext({ service: 'parent' });
-        const child = logger.child({ requestId: 'req-123' }) as TestLogger;
+        const child = logger.child({ requestId: 'req-123' });
 
-        // Child should have merged context
-        const childContext = child.getGlobalContext();
-        expect(childContext).toEqual({
+        // LOG-API-001: Child uses delegation pattern - verify via logged entries
+        child.info('test message');
+
+        // Entry should have merged context (parent + child)
+        expect(logger.entries).toHaveLength(1);
+        expect(logger.entries[0].context).toEqual({
           service: 'parent',
           requestId: 'req-123',
         });
@@ -446,19 +449,31 @@ describe('BaseLogger', () => {
           level: 'debug',
           prefix: 'Test',
         });
-        const child = customLogger.child({ requestId: '123' }) as TestLogger;
+        const child = customLogger.child({ requestId: '123' });
 
-        expect(child.getConfig().level).toBe('debug');
-        expect(child.getConfig().prefix).toBe('Test');
+        // LOG-API-001: Verify config is inherited by checking behavior
+        // Child should use parent's prefix and level
+        child.debug('debug message');
+        expect(customLogger.entries).toHaveLength(1);
+        expect(customLogger.entries[0].message).toBe('[Test] debug message');
       });
 
       it('should not affect parent when child context changes', () => {
         const parent = new TestLogger();
         parent.setContext({ service: 'parent' });
-        const child = parent.child({ requestId: 'child-req' }) as TestLogger;
+        const child = parent.child({ requestId: 'child-req' });
         child.setContext({ extra: 'childOnly' });
 
+        // Parent context should remain unchanged
         expect(parent.getGlobalContext()).toEqual({ service: 'parent' });
+
+        // But child logs should have the extra context
+        child.info('child message');
+        expect(parent.entries[0].context).toEqual({
+          service: 'parent',
+          requestId: 'child-req',
+          extra: 'childOnly',
+        });
       });
     });
 

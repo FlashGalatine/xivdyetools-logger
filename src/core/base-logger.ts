@@ -210,11 +210,9 @@ export abstract class BaseLogger implements ExtendedLogger {
   // =========================================================================
 
   child(context: LogContext): ExtendedLogger {
-    // Create a new instance with the same config
-    const ChildClass = this.constructor as new (config: Partial<LoggerConfig>) => BaseLogger;
-    const childLogger = new ChildClass(this.config);
-    childLogger.globalContext = { ...this.globalContext, ...context };
-    return childLogger;
+    // LOG-API-001: Use delegation pattern instead of creating full clone
+    // This avoids duplicating adapters and allows shared state with parent
+    return new DelegatingLogger(this, context);
   }
 
   setContext(context: LogContext): void {
@@ -239,6 +237,60 @@ export abstract class BaseLogger implements ExtendedLogger {
     } finally {
       end();
     }
+  }
+}
+
+/**
+ * LOG-API-001: Delegating logger for child() calls
+ *
+ * Instead of cloning the parent logger (which duplicates adapters),
+ * this class delegates all write() calls to the parent while merging
+ * its own context. Benefits:
+ * - Shared adapter instance (no memory overhead)
+ * - Parent config changes automatically apply to children
+ * - Nested children form a chain of context merging
+ */
+class DelegatingLogger implements ExtendedLogger {
+  constructor(
+    private parent: BaseLogger,
+    private childContext: LogContext
+  ) {}
+
+  debug(message: string, context?: LogContext): void {
+    this.parent.debug(message, this.mergeContext(context));
+  }
+
+  info(message: string, context?: LogContext): void {
+    this.parent.info(message, this.mergeContext(context));
+  }
+
+  warn(message: string, context?: LogContext): void {
+    this.parent.warn(message, this.mergeContext(context));
+  }
+
+  error(message: string, error?: unknown, context?: LogContext): void {
+    this.parent.error(message, error, this.mergeContext(context));
+  }
+
+  child(context: LogContext): ExtendedLogger {
+    // Create a new delegating logger with merged context
+    return new DelegatingLogger(this.parent, { ...this.childContext, ...context });
+  }
+
+  setContext(context: LogContext): void {
+    Object.assign(this.childContext, context);
+  }
+
+  time(label: string): () => number {
+    return this.parent.time(label);
+  }
+
+  async timeAsync<T>(label: string, fn: () => Promise<T>): Promise<T> {
+    return this.parent.timeAsync(label, fn);
+  }
+
+  private mergeContext(context?: LogContext): LogContext {
+    return context ? { ...this.childContext, ...context } : this.childContext;
   }
 }
 

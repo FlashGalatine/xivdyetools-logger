@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `@xivdyetools/logger` is a unified logging library for the xivdyetools ecosystem, supporting browser, Node.js, and Cloudflare Workers environments. It provides structured JSON logging, request correlation, secret redaction, and performance timing.
 
-## Development Commands
+## Commands
 
 ```bash
 npm run build          # Build with TypeScript (uses tsconfig.build.json)
@@ -15,6 +15,11 @@ npm run test           # Run tests with Vitest
 npm run test:watch     # Run tests in watch mode
 npm run test:coverage  # Run tests with coverage report
 npm run clean          # Remove dist/ and coverage/
+```
+
+### Pre-commit Checklist
+```bash
+npm run test -- --run && npm run build
 ```
 
 ## Architecture
@@ -60,3 +65,16 @@ npx vitest run src/core/base-logger.test.ts
 - **Secret Redaction**: Fields in `DEFAULT_REDACT_FIELDS` (password, token, secret, etc.) are automatically redacted from log context
 - **Child Loggers**: `logger.child({ requestId })` creates a new logger inheriting parent context
 - **Error Sanitization**: When `sanitizeErrors: true`, stack traces are removed and sensitive patterns in error messages are redacted
+
+## Related Projects
+
+**Dependencies:**
+- `@xivdyetools/types` - Shared type definitions
+
+**Dependents:**
+- `@xivdyetools/core` - Uses library preset
+- xivdyetools-discord-worker - Uses worker preset
+- xivdyetools-moderation-worker - Uses worker preset
+- xivdyetools-presets-api - Uses worker preset
+- xivdyetools-oauth - Uses worker preset
+- xivdyetools-web-app - Uses browser preset

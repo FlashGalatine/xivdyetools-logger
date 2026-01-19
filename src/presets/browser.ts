@@ -168,9 +168,22 @@ const activeTimers = new Map<string, number>();
 export const perf = {
   /**
    * Start a performance timer
+   *
+   * LOGGER-BUG-001 FIX: Warn if timer is already active to prevent
+   * race condition data loss in concurrent operations.
+   *
+   * @returns true if timer was started, false if already active
    */
-  start(label: string): void {
+  start(label: string): boolean {
+    if (activeTimers.has(label)) {
+      console.warn(
+        `Timer "${label}" is already active. Call end() before starting again, ` +
+          `or use a unique label for concurrent operations.`
+      );
+      return false;
+    }
     activeTimers.set(label, performance.now());
+    return true;
   },
 
   /**

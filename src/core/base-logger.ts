@@ -7,22 +7,11 @@
  */
 
 import type { Logger, ExtendedLogger, LogContext, LogEntry, LogLevel, LoggerConfig } from '../types.js';
+// LOGGER-REF-003 FIX: Import from centralized constants
+import { DEFAULT_REDACT_FIELDS } from '../constants.js';
 
 /** Log levels in order of severity (for filtering) */
 const LOG_LEVELS: LogLevel[] = ['debug', 'info', 'warn', 'error'];
-
-/** Default fields to redact from logs */
-const DEFAULT_REDACT_FIELDS = [
-  'password',
-  'token',
-  'secret',
-  'authorization',
-  'cookie',
-  'api_key',
-  'apiKey',
-  'access_token',
-  'refresh_token',
-];
 
 /**
  * Abstract base logger with common functionality
@@ -40,7 +29,7 @@ export abstract class BaseLogger implements ExtendedLogger {
       format: 'json',
       timestamps: true,
       sanitizeErrors: true,
-      redactFields: DEFAULT_REDACT_FIELDS,
+      redactFields: [...DEFAULT_REDACT_FIELDS],
       ...config,
     };
   }

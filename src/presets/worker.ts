@@ -8,6 +8,8 @@
 
 import { JsonAdapter } from '../adapters/json-adapter.js';
 import type { ExtendedLogger, LoggerConfig } from '../types.js';
+// LOGGER-REF-003 FIX: Import from centralized constants
+import { WORKER_REDACT_FIELDS } from '../constants.js';
 
 /**
  * Options for worker logger
@@ -64,21 +66,7 @@ export function createWorkerLogger(
     format: 'json',
     timestamps: true,
     sanitizeErrors: true,
-    redactFields: [
-      'password',
-      'token',
-      'secret',
-      'authorization',
-      'cookie',
-      'api_key',
-      'apiKey',
-      'access_token',
-      'refresh_token',
-      'jwt_secret',
-      'bot_api_secret',
-      'bot_signing_secret',
-      'discord_client_secret',
-    ],
+    redactFields: [...WORKER_REDACT_FIELDS],
   };
 
   const logger = new JsonAdapter(config);

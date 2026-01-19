@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-19
+
+### Fixed
+
+- **LOGGER-BUG-001**: Fixed race condition in `perf.start()` that silently overwrote existing timers with same label. Now warns and returns `false` if timer already active, preventing data loss when concurrent operations use the same label
+
+### Refactored
+
+- **LOGGER-REF-003**: Consolidated hardcoded redact fields to centralized `constants.ts`. Core fields (9) and worker-specific fields (4) now defined in single source of truth with `CORE_REDACT_FIELDS`, `WORKER_SPECIFIC_REDACT_FIELDS`, and `WORKER_REDACT_FIELDS` constants
+
+---
+
 ## [1.0.2] - 2025-12-24
 
 ### Fixed
